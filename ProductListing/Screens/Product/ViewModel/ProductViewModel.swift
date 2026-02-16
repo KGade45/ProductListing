@@ -6,23 +6,14 @@
 //
 
 import Foundation
+import Combine
 
+@MainActor
 final class ProductViewModel {
-    var products: [Product] = []
-    var handler: ((_ event: Event) -> Void)?
+    @Published private(set) var products: [Product] = []
 
-    func fetchProducts() {
-        handler?(.loading)
-        APIManager.shared.fetchProducts { (result) in
-            self.handler?(.dataLoaded)
-            switch result {
-            case .success(let products):
-                self.products = products
-                self.handler?(.dataLoaded)
-            case .failure(let error):
-                self.handler?(.error(error))
-            }
-        }
+    func fetchProducts() async throws {
+        self.products = try await APIManager.shared.fetchProducts()
     }
 }
 
