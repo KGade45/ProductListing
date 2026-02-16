@@ -6,10 +6,13 @@
 //
 
 import UIKit
+import Combine
 
 class ProductViewController: UIViewController {
 
+    private var cancellables: Set<AnyCancellable> = []
     private let productViewModel = ProductViewModel()
+    private var fetchTask: Task<Void, Never>?
 
     let tableView: UITableView = {
         let tableView = UITableView()
@@ -20,38 +23,36 @@ class ProductViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         configure()
+        fetchTask = Task {
+            do {
+                try await productViewModel.fetchProducts()
+            } catch {
+                print("Failed to fetch:", error)
+            }
+        }
+    }
+
+    deinit {
+        fetchTask?.cancel()
     }
 }
 
 extension ProductViewController {
     private func configure() {
-        initiateViewModel()
-        obersevedEvent()
+        observedEvent()
         view.addSubview(tableView)
         tableView.frame = view.bounds
         tableView.delegate = self
         tableView.dataSource = self
     }
 
-    private func initiateViewModel() {
-        productViewModel.fetchProducts()
-    }
-
-    private func obersevedEvent() {
-        productViewModel.handler = { [weak self] event in
-            guard let self else { return }
-            switch event {
-            case .loading:
-                print("Loading")
-            case .dataLoaded:
-                print(productViewModel.products)
-                DispatchQueue.main.async {
-                    self.tableView.reloadData()
-                }
-            case .error(let error):
-                print(error?.localizedDescription ?? "Unknown Error")
+    private func observedEvent() {
+        productViewModel.$products
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.tableView.reloadData()
             }
-        }
+            .store(in: &cancellables)
     }
 }
 
