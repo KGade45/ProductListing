@@ -70,6 +70,8 @@ class ProductTableViewCell: UITableViewCell {
     func setupViews() {
         mainStackView.addArrangedSubview(productImageView)
         mainStackView.addArrangedSubview(infoStackView)
+        mainStackView.alignment = .center
+        mainStackView.distribution = .fill
         infoStackView.addArrangedSubview(productName)
         infoStackView.addArrangedSubview(productPrice)
         infoStackView.addArrangedSubview(productDesc)
@@ -84,9 +86,7 @@ class ProductTableViewCell: UITableViewCell {
             mainStackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
             mainStackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8),
             productImageView.widthAnchor.constraint(equalToConstant: 80),
-            productImageView.heightAnchor.constraint(equalTo: mainStackView.heightAnchor, multiplier: 0.9),
-            infoStackView.leadingAnchor.constraint(equalTo: productImageView.trailingAnchor, constant: 8),
-            infoStackView.trailingAnchor.constraint(equalTo: mainStackView.trailingAnchor, constant: 8),
+            // infoStackView.leadingAnchor constraint is optional because mainStackView spacing handles it
             infoStackView.topAnchor.constraint(equalTo: mainStackView.topAnchor, constant: 8),
             infoStackView.bottomAnchor.constraint(equalTo: mainStackView.bottomAnchor, constant: -8),
         ])
