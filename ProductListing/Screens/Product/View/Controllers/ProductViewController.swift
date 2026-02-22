@@ -10,6 +10,8 @@ import Combine
 
 class ProductViewController: UIViewController {
 
+    let productService = ProductService("1")
+
     private var cancellables: Set<AnyCancellable> = []
     private let productViewModel = ProductViewModel()
     private var fetchTask: Task<Void, Never>?
@@ -26,6 +28,7 @@ class ProductViewController: UIViewController {
         fetchTask = Task {
             do {
                 try await productViewModel.fetchProducts()
+                try await productService.loadProduct()
             } catch {
                 print("Failed to fetch:", error)
             }
