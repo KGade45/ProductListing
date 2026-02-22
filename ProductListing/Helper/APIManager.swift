@@ -44,13 +44,23 @@ final class APIManager {
 
     func get<T: Decodable>(_ request: APIRequest) async throws -> T {
         let urlRequest = try request.asURLRequest()
-        let (data, response) = try await session.data(for: urlRequest)
 
-        guard let response = response as? HTTPURLResponse,
-              200...299 ~= response.statusCode else {
+        let (data, response): (Data, URLResponse)
+        do {
+            (data, response) = try await session.data(for: urlRequest)
+        } catch {
+            throw DataError.invalidURL
+        }
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              200...299 ~= httpResponse.statusCode else {
             throw DataError.invalideResponse
         }
 
-        return try JSONDecoder().decode(T.self, from: data)
+        do {
+            return try JSONDecoder().decode(T.self, from: data)
+        } catch {
+            throw DataError.unableToDecode
+        }
     }
 }
