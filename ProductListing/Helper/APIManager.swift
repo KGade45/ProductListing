@@ -51,10 +51,6 @@ final class APIManager {
             throw DataError.invalideResponse
         }
 
-        do {
-            return try JSONDecoder().decode(T.self, from: data)
-        } catch {
-            throw DataError.unableToDecode
-        }
+        return try JSONDecoder().decode(T.self, from: data)
     }
 }

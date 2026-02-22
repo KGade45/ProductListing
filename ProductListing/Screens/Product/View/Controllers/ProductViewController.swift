@@ -10,7 +10,7 @@ import Combine
 
 class ProductViewController: UIViewController {
 
-    let productService = ProductService("1")
+    let productService = ProductService()
 
     private var cancellables: Set<AnyCancellable> = []
     private let productViewModel = ProductViewModel()
