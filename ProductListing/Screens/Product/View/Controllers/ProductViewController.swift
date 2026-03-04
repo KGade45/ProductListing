@@ -10,11 +10,10 @@ import Combine
 
 class ProductViewController: UIViewController {
 
-    let productService = ProductService()
-
     private var cancellables: Set<AnyCancellable> = []
     private let productViewModel = ProductViewModel()
     private var fetchTask: Task<Void, Never>?
+    private let activityIndicator = UIActivityIndicatorView(style: .medium)
 
     let tableView: UITableView = {
         let tableView = UITableView()
@@ -24,11 +23,30 @@ class ProductViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        view.addSubview(activityIndicator)
         configure()
+        bindViewModel()
+        fetchProducts()
+    }
+
+    private func bindViewModel() {
+        productViewModel.$loading
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] isLoading in
+                print("Loading changed:", isLoading)
+                if isLoading {
+                    self?.activityIndicator.startAnimating()
+                } else {
+                    self?.activityIndicator.stopAnimating()
+                }
+            }
+            .store(in: &cancellables)
+    }
+
+    private func fetchProducts() {
         fetchTask = Task {
             do {
                 try await productViewModel.fetchProducts()
-                try await productService.loadProduct()
             } catch {
                 print("Failed to fetch:", error)
             }
@@ -47,6 +65,7 @@ extension ProductViewController {
         tableView.frame = view.bounds
         tableView.delegate = self
         tableView.dataSource = self
+        setupActivityIndicator()
     }
 
     private func observedEvent() {
@@ -56,6 +75,20 @@ extension ProductViewController {
                 self?.tableView.reloadData()
             }
             .store(in: &cancellables)
+    }
+
+    private func setupActivityIndicator() {
+        activityIndicator.translatesAutoresizingMaskIntoConstraints = false
+        activityIndicator.style = .large
+        activityIndicator.hidesWhenStopped = true
+        
+        view.addSubview(activityIndicator)
+        view.bringSubviewToFront(activityIndicator)
+        
+        NSLayoutConstraint.activate([
+            activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+        ])
     }
 }
 
@@ -76,5 +109,15 @@ extension ProductViewController: UITableViewDelegate, UITableViewDataSource {
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
+
+        let product = productViewModel.products[indexPath.row]
+
+        Task {
+            try? await productViewModel.addProduct(product)
+        }
+
+        let detailViewController = ProductDetailViewController()
+        detailViewController.bind(viewData: product)
+        navigationController?.pushViewController(detailViewController, animated: true)
     }
 }

@@ -13,12 +13,12 @@ protocol APIRequest {
     var headers: [String: String]? { get }
     var body: Data? { get }
     var queryItems: [URLQueryItem]? { get }
-    var baseURL: String { get }
+    var baseURL: URL { get }
 }
 
 extension APIRequest {
     func asURLRequest() throws -> URLRequest {
-        let url = URL(string: baseURL)!
+        let url = baseURL
         var components = URLComponents(url: url.appendingPathComponent(path), resolvingAgainstBaseURL: false)
         components?.queryItems = queryItems
 

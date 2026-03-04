@@ -7,15 +7,22 @@
 
 import Foundation
 
-class ProductRequest: APIRequest {
+struct ProductRequest: APIRequest {
 
     var productID: String?
     var methodType: HTTPMethods
     var header: [String: String]?
     var queryParam: [URLQueryItem]?
     var bodyData: Data?
+    var urlpath: String
     
-    init(productID: String? = nil, methodType: HTTPMethods = .get, header: [String: String]? = nil, queryParam: [URLQueryItem]? = nil, bodyData: Data? = nil) {
+    init(productID: String? = nil,
+         path: String = "",
+         methodType: HTTPMethods = .get,
+         header: [String: String]? = nil,
+         queryParam: [URLQueryItem]? = nil,
+         bodyData: Data? = nil) {
+        self.urlpath = path
         self.productID = productID
         self.methodType = methodType
         self.header = header
@@ -23,15 +30,16 @@ class ProductRequest: APIRequest {
         self.bodyData = bodyData
     }
 
-    var baseURL: String {
-        "https://fakestoreapi.com"
+    var baseURL: URL {
+        URL(string: "https://fakestoreapi.com")!
     }
 
     var path: String {
         if let productID {
-            return "/products/\(productID)"
+            return "\(urlpath)/\(productID)"
+        } else {
+            return urlpath
         }
-        else { return "/products" }
     }
 
     var method: HTTPMethods {
