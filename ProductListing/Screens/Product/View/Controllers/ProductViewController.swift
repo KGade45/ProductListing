@@ -13,6 +13,7 @@ class ProductViewController: UIViewController {
     private var cancellables: Set<AnyCancellable> = []
     private let productViewModel = ProductViewModel()
     private var fetchTask: Task<Void, Never>?
+    private let activityIndicator = UIActivityIndicatorView(style: .medium)
 
     let tableView: UITableView = {
         let tableView = UITableView()
@@ -22,7 +23,27 @@ class ProductViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        view.addSubview(activityIndicator)
         configure()
+        bindViewModel()
+        fetchProducts()
+    }
+
+    private func bindViewModel() {
+        productViewModel.$loading
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] isLoading in
+                print("Loading changed:", isLoading)
+                if isLoading {
+                    self?.activityIndicator.startAnimating()
+                } else {
+                    self?.activityIndicator.stopAnimating()
+                }
+            }
+            .store(in: &cancellables)
+    }
+
+    private func fetchProducts() {
         fetchTask = Task {
             do {
                 try await productViewModel.fetchProducts()
@@ -44,6 +65,7 @@ extension ProductViewController {
         tableView.frame = view.bounds
         tableView.delegate = self
         tableView.dataSource = self
+        setupActivityIndicator()
     }
 
     private func observedEvent() {
@@ -54,6 +76,20 @@ extension ProductViewController {
             }
             .store(in: &cancellables)
     }
+
+    private func setupActivityIndicator() {
+        activityIndicator.translatesAutoresizingMaskIntoConstraints = false
+        activityIndicator.style = .large
+        activityIndicator.hidesWhenStopped = true
+        
+        view.addSubview(activityIndicator)
+        view.bringSubviewToFront(activityIndicator)
+        
+        NSLayoutConstraint.activate([
+            activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+        ])
+    }
 }
 
 extension ProductViewController: UITableViewDelegate, UITableViewDataSource {
@@ -63,7 +99,9 @@ extension ProductViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell: ProductTableViewCell = tableView.dequeueReusableCell(withIdentifier: ProductTableViewCell.identifier, for: indexPath) as! ProductTableViewCell
-        cell.config(with: productViewModel.products[indexPath.row])
+        Task {
+            try await cell.config(with: productViewModel.products[indexPath.row])
+        }
         return cell
     }
 
@@ -73,5 +111,17 @@ extension ProductViewController: UITableViewDelegate, UITableViewDataSource {
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
+
+        let product = productViewModel.products[indexPath.row]
+
+        Task {
+            try? await productViewModel.addProduct(product)
+        }
+
+        let detailViewController = ProductDetailViewController()
+        Task {
+            try await detailViewController.bind(viewData: product)
+        }
+        navigationController?.pushViewController(detailViewController, animated: true)
     }
 }

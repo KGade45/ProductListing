@@ -7,16 +7,23 @@
 
 import UIKit
 
-extension UIImageView {
-    func load(from urlString: String) {
-        guard let url = URL(string: urlString) else { return }
+let imageCache = NSCache<NSURL, UIImage>()
 
-        URLSession.shared.dataTask(with: url) { data, _, error in
-            if let data = data, let image = UIImage(data: data), error == nil {
-                DispatchQueue.main.async {
-                    self.image = image
-                }
-            }
-        }.resume()
-    }
+extension UIImageView {
+//    func load(from urlString: String) {
+//        guard let url = URL(string: urlString) else { return }
+//
+//        if let imageFromCache = imageCache.object(forKey: url as NSURL) {
+//            self.image = imageFromCache
+//            return
+//        }
+//        URLSession.shared.dataTask(with: url) { data, _, error in
+//            if let data = data, let image = UIImage(data: data), error == nil {
+//                imageCache.setObject(image, forKey: url as NSURL)
+//                DispatchQueue.main.async {
+//                    self.image = image
+//                }
+//            }
+//        }.resume()
+//    }
 }
