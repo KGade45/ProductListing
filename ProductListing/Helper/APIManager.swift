@@ -15,13 +15,13 @@ enum DataError: Error {
     case clientError(Int)
     case serverError(Int)
     case unauthorized
+    case message(String)
 }
 
 final class APIManager {
 
     private let session: URLSession
     static let shared = APIManager()
-
     init(session: URLSession = .shared) {
         self.session = session
     }
@@ -81,7 +81,7 @@ final class APIManager {
     func requestWithRetry<T: Decodable>(_ request: APIRequest, retryCount: Int = 2) async throws -> T {
         do {
             return try await self.request(request)
-        } catch DataError.serverError(let code) where retryCount > 0 {
+        } catch DataError.serverError(_) where retryCount > 0 {
             print("Retrying due to server error")
             return try await requestWithRetry(request, retryCount: retryCount - 1)
         } catch DataError.network(_) where retryCount > 0 {

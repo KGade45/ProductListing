@@ -99,7 +99,9 @@ extension ProductViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell: ProductTableViewCell = tableView.dequeueReusableCell(withIdentifier: ProductTableViewCell.identifier, for: indexPath) as! ProductTableViewCell
-        cell.config(with: productViewModel.products[indexPath.row])
+        Task {
+            try await cell.config(with: productViewModel.products[indexPath.row])
+        }
         return cell
     }
 
@@ -117,7 +119,9 @@ extension ProductViewController: UITableViewDelegate, UITableViewDataSource {
         }
 
         let detailViewController = ProductDetailViewController()
-        detailViewController.bind(viewData: product)
+        Task {
+            try await detailViewController.bind(viewData: product)
+        }
         navigationController?.pushViewController(detailViewController, animated: true)
     }
 }

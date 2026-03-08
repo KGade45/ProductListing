@@ -51,8 +51,9 @@ class ProductDetailViewController: UIViewController {
         return stack
     }()
 
-    func bind(viewData: Product) {
-        productImage.load(from: viewData.image)
+    func bind(viewData: Product) async throws {
+        let image = try await ImageLoader.shared.loadImage(from: viewData.image)
+        productImage.image = image
         productName.text = viewData.title
         decsriptionLabel.text = viewData.description
         priceLabel.text = "$\(viewData.price)"

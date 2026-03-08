@@ -79,6 +79,10 @@ class ProductTableViewCell: UITableViewCell {
         activateConstraints()
     }
 
+    override func prepareForReuse() {
+        productImageView.image = nil
+    }
+
     func activateConstraints() {
         NSLayoutConstraint.activate([
             mainStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 8),
@@ -92,10 +96,11 @@ class ProductTableViewCell: UITableViewCell {
         ])
     }
 
-    func config(with product: Product) {
+    func config(with product: Product) async throws {
         productName.text = product.title
         productPrice.text = "$\(product.price)"
         productDesc.text = product.description
-        productImageView.load(from: product.image)
+        let image = try await ImageLoader.shared.loadImage(from: product.image)
+        productImageView.image = image
     }
 }
